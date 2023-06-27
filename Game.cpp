@@ -1,74 +1,96 @@
-#include "Game.h"
 #include <iostream>
+#include "Game.h"
 #include "StateManager.h"
 #include "States.h"
 
-using namespace std;
 
 Game::Game()
-	: m_running{ false }
-	, windowPtr{ NULL }
-	, rendererPtr{ NULL }
-	//, m_rectangleTransform{ SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 100, 100 }
-	, m_keyStates{ NULL }
+	: m_running(false)
+	, m_pWindow(nullptr)
+	, m_pRenderer(nullptr)
+	, m_keyStates(nullptr)
 {
+
 }
+
 Game& Game::GetInstance()
 {
-	static Game* instancePtr = new Game();
-	return *instancePtr;
+	static Game* pInstance = new Game();
+	return *pInstance;
 }
+
 int Game::Init(const char* title, int xPos, int yPos)
 {
-	cout << "Initializing SDL Engine..." << endl;
-
-	// Call to SDL_Init(). This will initialize SDL and the video subsystem.
+	std::cout << "Initializing engine..." << std::endl;
+	//Call to SDL_Init(). Initialize SDL and video subsystem
 	int errorCode = SDL_Init(SDL_INIT_EVERYTHING);
 	if (errorCode == 0)
-		cout << "SDL_Init() succeeded." << endl;
+	{
+		std::cout << "SDL_Init() succeeded." << std::endl;
+	}
 	else
 	{
-		cout << "SDL_Init() failed. Error Code " << errorCode << ": " << SDL_GetError() << endl;
+		std::cout << "SDL_Init() failed. Error code " << errorCode << ": " << SDL_GetError() << std::endl;
 		system("pause");
 		return errorCode;
 	}
 
-	// Attempt to create a maximized window that can be restored to a SCREEN_WIDTH*SCREEN_HEIGHT, centered window.
-	windowPtr = SDL_CreateWindow("Spectrum", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-	if (windowPtr != NULL)
-		cout << "SDL_CreateWindow() succeeded." << endl;
+	//Attempt to create a maximized window that can be restored to a kWidthxkHeight, centered window.
+	m_pWindow = SDL_CreateWindow("GAME 1017",            //title,
+		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,  //x, y
+		kWidth, kHeight,								 //w, h
+		0);												 // flags
+	if (m_pWindow != nullptr)
+	{
+		std::cout << "SDL_CreateWindow() succeeded." << std::endl;
+	}
 	else
 	{
-		cout << "SDL_CreateWindow() failed. Error Code " << errorCode << ": " << SDL_GetError() << endl;
+		std::cout << "SDL_CreateWindow() failed. Error: " << SDL_GetError() << std::endl;
 		SDL_Quit();
 		system("pause");
 		return -1;
 	}
 
-	// Attempt to create a hardware-accelerated renderer for our window.
-	rendererPtr = SDL_CreateRenderer(windowPtr, -1, SDL_RENDERER_ACCELERATED);
-	if (rendererPtr != NULL)
-		cout << "SDL_CreateRenderer() succeeded." << endl;
+	//Attempts to create a hardware-accelerated renderer for our window.
+	m_pRenderer = SDL_CreateRenderer(m_pWindow, -1, SDL_RENDERER_ACCELERATED);
+	if (m_pRenderer != nullptr)
+	{
+		std::cout << "SDL_CreateRenderer() succeeded." << std::endl;
+	}
 	else
 	{
-		cout << "SDL_CreateRenderer() failed. Error code " << errorCode << ": " << SDL_GetError() << endl;
-		SDL_DestroyWindow(windowPtr);
+		std::cout << "SDL_CreateRenderer() failed. Error: " << SDL_GetError() << std::endl;
+		SDL_DestroyWindow(m_pWindow);
 		SDL_Quit();
 		system("pause");
 		return -1;
 	}
 
-	cout << "Initialization Successful!" << endl;
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 8, 48000))
+	{
+		std::cout << "Mix_OpenAudio() succeeded." << std::endl;
+
+	}
+	else
+	{
+		std::cout << "Mix_OpenAudio() failed. Error: " << SDL_GetError() << std::endl;
+	}
+	std::cout << "Initialization successful!!!" << std::endl;
+	
 	StateManager::PushState(new TitleState());
-
-	m_keyStates = SDL_GetKeyboardState(NULL);
+	
+	m_keyStates = SDL_GetKeyboardState(nullptr);
+	
 	m_running = true;
 	return 0;
 }
+
 bool Game::IsRunning()
 {
 	return m_running;
 }
+
 void Game::HandleEvents()
 {
 	SDL_Event event;
@@ -82,48 +104,7 @@ void Game::HandleEvents()
 		}
 	}
 }
-void Game::Update(float deltaTime)
-{
-	StateManager::Update(deltaTime);
 
-	//if (KeyDown(SDL_SCANCODE_W))
-	//	m_rectangleTransform.y -= RECTANGLE_SPEED * deltaTime;
-	//if (KeyDown(SDL_SCANCODE_S))
-	//	m_rectangleTransform.y += RECTANGLE_SPEED * deltaTime;
-	//if (KeyDown(SDL_SCANCODE_A))
-	//	m_rectangleTransform.x -= RECTANGLE_SPEED * deltaTime;
-	//if (KeyDown(SDL_SCANCODE_D))
-	//	m_rectangleTransform.x += RECTANGLE_SPEED * deltaTime;
-}
-void Game::Render()
-{
-	StateManager::Render();
-
-	//SDL_SetRenderDrawColor(rendererPtr, 0, 125, 255, 255);
-	//SDL_RenderClear(rendererPtr);
-
-	// Any Drawing Here...
-	/*SDL_Rect rectanglePlacement;
-	rectanglePlacement.x = 20;
-	rectanglePlacement.y = 40;
-	rectanglePlacement.w = 60;
-	rectanglePlacement.h = 80;*/
-
-	/*SDL_SetRenderDrawColor(rendererPtr, 0, 0, 255, 255);
-	SDL_RenderFillRectF(rendererPtr, &m_rectangleTransform);*/
-
-	SDL_RenderPresent(rendererPtr); // Flip Buffer - Sends data to Window.
-}
-void Game::Clean()
-{
-	cout << "Cleaning Engine..." << endl;
-	StateManager::Quit();
-	SDL_DestroyRenderer(rendererPtr);
-	SDL_DestroyWindow(windowPtr);
-	SDL_Quit();
-
-	delete this;
-}
 bool Game::KeyDown(SDL_Scancode key)
 {
 	if (m_keyStates)
@@ -133,3 +114,25 @@ bool Game::KeyDown(SDL_Scancode key)
 	return false;
 }
 
+void Game::Update(float deltaTime)
+{
+	StateManager::Update(deltaTime);
+}
+
+void Game::Render()
+{
+
+	StateManager::Render();
+	SDL_RenderPresent(m_pRenderer); // Flip buffers - send data to window.
+}
+
+void Game::Clean()
+{
+	std::cout << "Cleaning engine..." << std::endl;
+	StateManager::Quit();
+	SDL_DestroyRenderer(m_pRenderer);
+	SDL_DestroyWindow(m_pWindow);
+	SDL_Quit();
+
+	delete this;
+}
