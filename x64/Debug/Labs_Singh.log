@@ -1,0 +1,4 @@
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(517,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (Labs_Ahmed.vcxproj, Labs_Nsoh.vcxproj, SDL project.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  Main.cpp
+  Labs_Singh.vcxproj -> C:\Users\prabh\Desktop\Game Fundamentals 2 working files\Lab 1\Labs_Singh\x64\Debug\Labs_Singh.exe
+          1 file(s) copied.
